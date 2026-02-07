@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTC USDT | Monitor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC USDT | Monitor</title>
+
     <style>
         * { box-sizing: border-box; }
         body {
@@ -60,18 +61,17 @@
         .filters button { background:transparent; color:#848e9c; border:1px solid #474d57; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px; }
         .filters button.active { background:#474d57; color:#fff; }
 
-        /* LISTA COM SCROLL */
+    
         #trades { 
             list-style: none; 
             margin: 0; 
             padding: 0; 
-            overflow-y: scroll; /* Scroll sempre ativo */
-            flex-grow: 1; /* Ocupa o resto da altura */
+            overflow-y: scroll; 
+            flex-grow: 1; 
             font-family: 'Courier New', monospace;
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Estilização da barra de rolagem */
         #trades::-webkit-scrollbar { width: 6px; }
         #trades::-webkit-scrollbar-track { background: #131722; }
         #trades::-webkit-scrollbar-thumb { background: #2a2e39; border-radius: 10px; }
@@ -100,29 +100,29 @@
         @media (max-width: 768px) {
             .dashboard { grid-template-columns: 1fr; grid-template-rows: 40vh 60vh; padding: 4px; gap: 4px; }
             .chart-container { height: 40vh; }
-            .trades-box { height: 60vh; } /* Altura definida para o scroll funcionar */
+            .trades-box { height: 60vh; }
             .price-header { font-size: 18px; padding: 6px; }
             #trades li { font-size: 10px; padding: 5px 2px; }
         }
     </style>
 </head>
-<body>
 
+<body>
 <div class="dashboard">
     <div class="chart-container">
-        <div class="chart">
-            <div id="tradingview_btc"></div>
-        </div>
+        <div class="chart"><div id="tradingview_btc"></div></div>
     </div>
 
     <div class="trades-box">
         <div class="price-header" id="btcPrice">0.00</div>
         <div id="volumeContainer"></div>
+
         <div class="filters">
             <button data-filter="all" class="active">Todos</button>
             <button data-filter="buy">Compras</button>
             <button data-filter="sell">Vendas</button>
         </div>
+
         <ul id="trades"></ul>
         <div class="whale-popup-container" id="whalePopupContainer"></div>
     </div>
@@ -131,136 +131,142 @@
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
 new TradingView.widget({
-    width: "100%", height: "100%", symbol: "BINANCE:BTCUSDT",
-    interval: "D", timezone: "America/Sao_Paulo", theme: "dark",
-    style: "1", locale: "pt_BR", container_id: "tradingview_btc",
-    hide_side_toolbar: true, save_image: false
+    width:"100%",height:"100%",
+    symbol:"BINANCE:BTCUSDT",
+    interval:"D",theme:"dark",
+    locale:"pt_BR",
+    timezone:"America/Sao_Paulo",
+    container_id:"tradingview_btc",
+    hide_side_toolbar:true,save_image:false
 });
 
-const sndBuy = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
-const sndSell = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+const sndBuy=new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+const sndSell=new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+document.addEventListener('click',()=>{
+    sndBuy.play().then(()=>{sndBuy.pause();sndBuy.currentTime=0});
+    sndSell.play().then(()=>{sndSell.pause();sndSell.currentTime=0});
+},{once:true});
 
-document.addEventListener('click', () => {
-    sndBuy.play().then(() => { sndBuy.pause(); sndBuy.currentTime = 0; });
-    sndSell.play().then(() => { sndSell.pause(); sndSell.currentTime = 0; });
-}, { once: true });
-
-const volumes = {};
-const timeframes = [
-    {l:"1m", m:60000}, 
-    {l:"10m", m:600000}, 
-    {l:"1h", m:3600000}
+const volumes={},timeframes=[
+    {l:"1m",m:60000},
+    {l:"10m",m:600000},
+    {l:"1h",m:3600000}
 ];
 
-const volCont = document.getElementById("volumeContainer");
+const volCont=document.getElementById("volumeContainer");
 
-timeframes.forEach(tf => {
-    volumes[tf.l] = { b: 0, s: 0 };
-    volCont.innerHTML += `
-        <div class="volume-box">
-            <div class="volume-title">Pressão ${tf.l}</div>
-            <div class="volume-bar">
-                <div id="b-${tf.l}" class="volume-buy" style="width:50%"></div>
-                <div id="s-${tf.l}" class="volume-sell" style="width:50%"></div>
-            </div>
-            <div class="volume-labels">
-                <span id="bt-${tf.l}">C: 50%</span>
-                <span id="st-${tf.l}">V: 50%</span>
-            </div>
-        </div>`;
-    setInterval(() => { volumes[tf.l] = {b:0, s:0}; updateBar(tf.l); }, tf.m);
+timeframes.forEach(tf=>{
+    volumes[tf.l]={bUSDT:0,sUSDT:0,bBTC:0,sBTC:0};
+
+    volCont.innerHTML+=`
+    <div class="volume-box">
+        <div class="volume-title">Pressão ${tf.l}</div>
+        <div class="volume-bar">
+            <div id="b-${tf.l}" class="volume-buy" style="width:50%"></div>
+            <div id="s-${tf.l}" class="volume-sell" style="width:50%"></div>
+        </div>
+        <div class="volume-labels">
+            <span id="b-${tf.l}t">C: 50% · 0.000 BTC</span>
+            <span id="s-${tf.l}t">V: 50% · 0.000 BTC</span>
+        </div>
+    </div>`;
+
+    setInterval(()=>{
+        volumes[tf.l]={bUSDT:0,sUSDT:0,bBTC:0,sBTC:0};
+        updateBar(tf.l);
+    },tf.m);
 });
 
-let currentFilter = 'all';
-document.querySelectorAll('.filters button').forEach(btn => {
-    btn.onclick = () => {
-        document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
+let currentFilter="all";
+document.querySelectorAll('.filters button').forEach(b=>{
+    b.onclick=()=>{
+        document.querySelectorAll('.filters button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        currentFilter=b.dataset.filter;
         applyFilter();
-    };
+    }
 });
 
-const socket = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade");
-let lastP = 0;
+const socket=new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade");
+let lastP=0;
 
-socket.onmessage = (e) => {
-    const d = JSON.parse(e.data);
-    const p = parseFloat(d.p);
-    const q = parseFloat(d.q);
-    const isS = d.m;
-    const totalUSDT = p * q;
-    const priceFormatted = p.toLocaleString('en-US', { minimumFractionDigits: 2 });
+socket.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    const p=+d.p,q=+d.q,isS=d.m,totalUSDT=p*q;
 
-    document.title = `₿ ${priceFormatted}`;
-    const elP = document.getElementById("btcPrice");
-    elP.textContent = priceFormatted;
-    elP.style.color = p >= lastP ? '#0ecb81' : '#f6465d';
-    lastP = p;
+    document.title=`₿ ${p.toFixed(2)}`;
+    const ph=document.getElementById("btcPrice");
+    ph.textContent=p.toFixed(2);
+    ph.style.color=p>=lastP?"#0ecb81":"#f6465d";
+    lastP=p;
 
-    timeframes.forEach(tf => {
-        isS ? volumes[tf.l].s += totalUSDT : volumes[tf.l].b += totalUSDT;
+    timeframes.forEach(tf=>{
+        if(isS){
+            volumes[tf.l].sUSDT+=totalUSDT;
+            volumes[tf.l].sBTC+=q;
+        }else{
+            volumes[tf.l].bUSDT+=totalUSDT;
+            volumes[tf.l].bBTC+=q;
+        }
         updateBar(tf.l);
     });
 
-    if (q >= 1) { 
-        playSnd(isS);
-        showPop(p, q, isS, totalUSDT);
-    }
-    addLi(p, q, isS, totalUSDT);
+    if(q>=1){playSnd(isS);showPop(p,q,isS,totalUSDT)}
+    addLi(p,q,isS,totalUSDT);
 };
 
-function updateBar(tf) {
-    const total = volumes[tf].b + volumes[tf].s || 1;
-    const bp = (volumes[tf].b / total) * 100;
-    document.getElementById(`b-${tf}`).style.width = bp + "%";
-    document.getElementById(`s-${tf}`).style.width = (100 - bp) + "%";
-    document.getElementById(`bt-${tf}`).textContent = `C: ${bp.toFixed(1)}%`;
-    document.getElementById(`st-${tf}`).textContent = `V: ${(100 - bp).toFixed(1)}%`;
+function updateBar(tf){
+    const v=volumes[tf];
+    const total=v.bUSDT+v.sUSDT||1;
+    const bp=(v.bUSDT/total)*100;
+    const sp=100-bp;
+
+    document.getElementById(`b-${tf}`).style.width=bp+"%";
+    document.getElementById(`s-${tf}`).style.width=sp+"%";
+
+    document.getElementById(`b-${tf}t`).textContent=
+        `C: ${bp.toFixed(1)}% · ${v.bBTC.toFixed(3)} BTC`;
+    document.getElementById(`s-${tf}t`).textContent=
+        `V: ${sp.toFixed(1)}% · ${v.sBTC.toFixed(3)} BTC`;
 }
 
-function addLi(p, q, isS, totalUSDT) {
-    const list = document.getElementById("trades");
-    const li = document.createElement("li");
-    li.className = isS ? "sell" : "buy";
-    if(q >= 1) li.classList.add("whale");
-    
-    const totalFormatted = totalUSDT.toLocaleString('en-US', { maximumFractionDigits: 0 });
-    
-    li.innerHTML = `
-        <span>${isS?'VENDA':'COMPRA'}</span> 
-        <span>${p.toFixed(1)}</span> 
-        <span>${q.toFixed(3)}</span> 
-        <span>$${totalFormatted}</span>`;
-    
+function addLi(p,q,isS,total){
+    const li=document.createElement("li");
+    li.className=(isS?"sell":"buy")+(q>=1?" whale":"");
+    li.innerHTML=`
+        <span>${isS?"VENDA":"COMPRA"}</span>
+        <span>${p.toFixed(1)}</span>
+        <span>${q.toFixed(3)}</span>
+        <span>$${total.toLocaleString()}</span>`;
+    const list=document.getElementById("trades");
     list.prepend(li);
-    // Limite de 50 resultados
-    if(list.children.length > 50) list.removeChild(list.lastChild);
+    if(list.children.length>50)list.removeChild(list.lastChild);
     applyFilter();
 }
 
-function applyFilter() {
-    document.querySelectorAll('#trades li').forEach(li => {
-        if(currentFilter === 'all') li.style.display = 'grid';
-        else li.style.display = li.classList.contains(currentFilter) ? 'grid' : 'none';
+function applyFilter(){
+    document.querySelectorAll('#trades li').forEach(li=>{
+        li.style.display=
+            currentFilter==="all"||li.classList.contains(currentFilter)
+            ?"grid":"none";
     });
 }
 
-function showPop(p, q, isS, totalUSDT) {
-    const c = document.getElementById("whalePopupContainer");
-    const pop = document.createElement("div");
-    pop.className = `whale-popup ${isS ? 'popup-sell' : 'popup-buy'}`;
-    const totalFormatted = totalUSDT.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-    
-    pop.innerHTML = `🚨 BALEIA ${isS ? 'VENDEU' : 'COMPROU'}<br>${q.toFixed(3)} BTC (${totalFormatted})`;
+function showPop(p,q,isS,total){
+    const c=document.getElementById("whalePopupContainer");
+    const pop=document.createElement("div");
+    pop.className=`whale-popup ${isS?'popup-sell':'popup-buy'}`;
+    pop.innerHTML=`🚨 BALEIA ${isS?'VENDEU':'COMPROU'}<br>
+        ${q.toFixed(3)} BTC (${total.toLocaleString('en-US',{
+            style:'currency',currency:'USD',maximumFractionDigits:0
+        })})`;
     c.prepend(pop);
-    setTimeout(() => { pop.style.opacity = '0'; setTimeout(()=>pop.remove(), 500); }, 4000);
+    setTimeout(()=>{pop.style.opacity=0;setTimeout(()=>pop.remove(),500)},4000);
 }
 
-function playSnd(isS) {
-    const s = isS ? sndSell : sndBuy;
-    s.currentTime = 0;
-    s.play().catch(() => {}); 
+function playSnd(isS){
+    const s=isS?sndSell:sndBuy;
+    s.currentTime=0;s.play().catch(()=>{});
 }
 </script>
 </body>
